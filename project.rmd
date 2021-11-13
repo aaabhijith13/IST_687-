@@ -1,0 +1,178 @@
+
+
+SHit to be done:
+1. outlier treatment - idk
+2. Graphs for Bivariate analsis and heatmap
+3. 
+```{r}
+library(base)
+library(ggplot2)
+library(grid)
+```
+
+
+```{r}
+data <- `Resort01.(1)`
+str(data)
+
+head(data)
+View(data)
+```
+
+
+```{r}
+which(is.na(data))
+col <- as.list(colnames(data))
+for (i in col)
+{
+  #cat("No null values in: ", i)
+  if(!(identical(which(is.na(data$i)), character(0))))
+    {
+    print(i)
+    print(" ,Has no null values\n")
+    }
+}
+
+if(!all(data$LeadTime > 0)){
+  print('ALl values greater than 0')
+}
+print(data[data$LeadTime < 0,])
+print(all(data$LeadTime) < 0 )
+
+for (i in col){
+  print(i)
+  cat(table(with(data, data[,i] < 0)))
+}
+
+
+```
+
+```{r}
+summary(data)
+```
+
+
+```{r}
+for (i in col){
+  uni <- as.list(unique(data[,i]))
+    cat("\nUnique values in",i, "are:  \n", unique(data[,i])) #should only print the first 10 values 
+}
+```
+```{r}
+numeric <- c("LeadTime", "StaysInWeekendNights", "StaysInWeekNights", "Adults", "PreviousCancellations", "PreviousBookingsNotCanceled", "BookingChanges")
+
+categorical <- c("IsCanceled", "Children", "Babies", "Meal", "Country", "MarketSegment", "IsRepeatedGuest", "ReservedRoomType" , "AssignedRoomType", "DepositType", "CustomerType", "RequiredCarParkingSpaces", "TotalOfSpecialRequests")
+
+for (i in categorical){
+  data[,i] <- as.factor(data[,i])
+}
+summary(data)
+class(data$IsCanceled)
+```
+
+```{r}
+histogram_boxplot <- function(arg1){
+  p2 <- ggplot(data, aes(x = arg1)) + geom_histogram(color = 'black', fill = 'white') + geom_vline(aes(xintercept=mean(arg1)), color="blue", linetype="dashed", size=1) + ggtitle(cat("Histogram for "))
+  p1 <- ggplot(data, aes(y = arg1)) + geom_boxplot() + coord_flip()
+  grid.newpage()
+  return(grid.draw(rbind(ggplotGrob(p1), ggplotGrob(p2), size = "last")))
+} #add x-ylabels and title #add mean for the boxplot if possible like a blue line or star
+
+for (i in numeric){
+  print(histogram_boxplot(data[,i]))
+}
+```
+
+```{r}
+to_be_transformed = c("LeadTime")
+for (i in to_be_transformed){
+  data[,i] <- log(data[,i])
+}
+
+for (i in numeric){
+  print(histogram_boxplot(data[,i]))
+}
+```
+
+
+
+ggplot(data, aes(y = LeadTime)) + geom_boxplot() + coord_flip()
+par(new = TRUE)
+
+p2 <- ggplot(data, aes(x = StaysInWeekendNights)) + geom_histogram(color = 'black', fill = 'white') + geom_vline(aes(xintercept=mean(StaysInWeekendNights)),
+                                                                                                                 color="blue", linetype="dashed", size=1)
+p1 <- ggplot(data, aes(y = StaysInWeekendNights)) + geom_boxplot() + coord_flip()
+grid.newpage()
+grid.draw(rbind(ggplotGrob(p1), ggplotGrob(p2), size = "last"))
+
+
+histogram_boxplot(data$LeadTime)#outliers
+histogram_boxplot(data$StaysInWeekendNights)#needs ot be scaled
+histogram_boxplot(data[,numeric[3]])#needs to be scaled
+histogram_boxplot(data$Adults)#needs to be scaled, outliers
+histogram_boxplot(data$PreviousCancellations)#needs to be scaled,outliers
+histogram_boxplot(data$PreviousBookingsNotCanceled)#needs to be scaled, outliers
+histogram_boxplot(data$BookingChanges)#needs to be scaled, outliers
+
+
+for (i in numeric){
+  histogram_boxplot(data[,i])
+}
+I
+
+barplots <- function(arg1){
+  ggplot(data, aes(x = arg1)) + geom_bar(fill = 'blue')
+}
+barplots(data$IsCanceled)
+barplots(data$Children)
+
+
+#Bivariate analysis 
+
+```{r}
+nums <- unlist(lapply(data, is.numeric))  
+data[,nums]
+correlation <- round(cor(data[,nums]),2)
+correlation
+
+cancelled <- subset(data, IsCanceled == 0)
+not_cancelled <- subset(data, IsCanceled == 1)
+
+library(reshape2)
+melted_cormat <- melt(correlation)
+head(melted_cormat)
+
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
+
+
+
+#Barplots of every categorical data against IsCancelled
+
+```{r}
+for (i in categorical){
+  
+  print(ggplot(data, aes(x = IsCanceled, y = i)) + geom_boxplot())
+  
+}
+ggplot(data = data, aes(x = IsCanceled, y = LeadTime )) + geom_bar(stat="identity",fill="steelblue") + geom_text(aes(label=length(IsCanceled)), vjust=-0.3, size=3.5)+ theme_minimal()
+length(data[data$IsCanceled == 0,])
+
+percentage_a = dim(data[data$IsCanceled == 0,])[1]/dim(data)[1] * 100
+percentage_b = dim(data[data$IsCanceled == 1,])[1]/dim(data)[1] * 100
+percentage_a
+percentage_b
+dim(data)[1]
+```
+
+```{r}
+for (i in numeric){
+  
+  print(ggplot(data, aes(x = IsCanceled, y = i)) + geom_boxplot())
+  
+}
+ggplot(data, aes(x = IsCanceled, y = LeadTime)) + geom_boxplot()
+```
+
