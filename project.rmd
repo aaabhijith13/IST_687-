@@ -168,11 +168,15 @@ dim(data)[1]
 ```
 
 ```{r}
+library(gapminder)
 for (i in numeric){
-  
-  print(ggplot(data, aes(x = IsCanceled, y = i)) + geom_boxplot())
+  print((noquote(i)))
+  print(ggplot(data, aes(x = IsCanceled, y = noquote(i))) + geom_boxplot())
   
 }
-ggplot(data, aes(x = IsCanceled, y = LeadTime)) + geom_boxplot()
+ggplot(data, aes(x = IsCanceled, y = LeadTime)) + geom_boxplot() + 
+              stat_summary(fun.y = mean, geom = "errorbar", 
+               aes(ymax = ..y.., ymin = ..y..),
+               width = .75, linetype = "dashed")
 ```
 
